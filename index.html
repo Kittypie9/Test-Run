@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastel Planner - Homework & Time Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8bbd9 0%, #e91e63 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-buttons {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-assistant-btn, .save-btn, .load-btn {
+            background: white;
+            color: #e91e63;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .ai-assistant-btn:hover, .save-btn:hover, .load-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .load-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .save-btn {
+            background: #2196f3;
+            color: white;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(248, 187, 217, 0.1);
+            border-bottom: 1px solid rgba(248, 187, 217, 0.2);
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(248, 187, 217, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(248, 187, 217, 0.4);
+        }
+
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            padding: 20px;
+            background: #f8f9ff;
+        }
+
+        .day-header {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 10px;
+        }
+
+        .day {
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            min-height: 100px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .day:hover {
+            border-color: #f8bbd9;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(248, 187, 217, 0.3);
+        }
+
+        .day.other-month {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        .day.today {
+            background: linear-gradient(135deg, #f8bbd9, #e91e63);
+            color: white;
+            box-shadow: 0 8px 25px rgba(248, 187, 217, 0.4);
+        }
+
+        .day.has-todos {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+        }
+
+        .day.has-todos .day-number {
+            color: #333;
+        }
+
+        .day.all-completed {
+            border-color: #4caf50;
+            background: linear-gradient(135deg, #f5fff5, #e0ffe0);
+        }
+
+        .day.all-completed .day-number {
+            color: #333;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .day-preview {
+            flex: 1;
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.2;
+            margin-top: 5px;
+        }
+
+        .preview-item {
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-event {
+            color: #2196f3;
+            font-weight: 500;
+        }
+
+        .todo-count {
+            background: #ff6b6b;
+            color: white;
+            border-radius: 15px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .completed-count {
+            background: #4caf50;
+            color: white;
+            border-radius: 15px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .add-todo-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .todo-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .todo-input:focus {
+            border-color: #f8bbd9;
+        }
+
+        .add-btn {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(248, 187, 217, 0.4);
+        }
+
+        .add-event-btn {
+            background: linear-gradient(45deg, #2196f3, #21cbf3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-event-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            background: #f8f9ff;
+            margin: 10px 0;
+            padding: 15px 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .todo-item:hover {
+            border-color: #f8bbd9;
+            transform: translateY(-2px);
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+            background: #e8f5e8;
+        }
+
+        .todo-item.event {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .todo-item.event:hover {
+            border-color: #2196f3;
+        }
+
+        .todo-text {
+            flex: 1;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .complete-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .complete-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .complete-btn.completed {
+            background: #666;
+            cursor: default;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .remove-btn {
+            background: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #757575;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .ai-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-sidebar.open {
+            right: 0;
+        }
+
+        .ai-sidebar-header {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-sidebar-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .ai-chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9ff;
+        }
+
+        .ai-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-message.assistant {
+            background: linear-gradient(135deg, #f8bbd9, #fce4ec);
+            margin-right: auto;
+        }
+
+        .ai-message.user {
+            background: #e3f2fd;
+            margin-left: auto;
+        }
+
+        .ai-input-area {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .ai-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .ai-input:focus {
+            border-color: #f8bbd9;
+        }
+
+        .ai-send-btn {
+            background: linear-gradient(45deg, #f8bbd9, #e91e63);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .ai-send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 2px solid #f8bbd9;
+            color: #e91e63;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-btn:hover {
+            background: #f8bbd9;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                gap: 1px;
+                padding: 10px;
+            }
+            
+            .day {
+                min-height: 80px;
+                padding: 8px;
+            }
+            
+            .modal-content {
+                width: 95%;
+            }
+            
+            .add-todo-form {
+                flex-direction: column;
+            }
+
+            .ai-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .ai-assistant-btn {
+                position: static;
+                transform: none;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Pastel Planner</h1>
+            <p>Stay organized and never miss a deadline!</p>
+            <button class="ai-assistant-btn" id="openAiBtn">🤖 AI Assistant</button>
+        </div>
+        
+        <div class="calendar-nav">
+            <button class="nav-btn" id="prevMonth">← Previous</button>
+            <div class="current-month" id="currentMonth"></div>
+            <button class="nav-btn" id="nextMonth">Next →</button>
+        </div>
+        
+        <div class="calendar-grid" id="calendar"></div>
+    </div>
+
+    <div class="modal" id="todoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <button class="close-btn" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="add-todo-form">
+                    <input type="text" class="todo-input" id="todoInput" placeholder="Add a new homework, task, or event...">
+                    <button class="add-btn" id="addTodo">Add Task</button>
+                    <button class="add-event-btn" id="addEvent">Add Event</button>
+                </div>
+                <ul class="todo-list" id="todoList"></ul>
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    No tasks or events for this day. Add one above!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ai-sidebar" id="aiSidebar">
+        <div class="ai-sidebar-header">
+            <h3>🤖 Planning Assistant</h3>
+            <button class="close-btn" id="closeAiBtn">×</button>
+        </div>
+        <div class="ai-chat-area" id="aiChatArea">
+            <div class="ai-message assistant">
+                Hi! I'm your scheduling assistant. I can help you organize your tasks, manage your time, and stay on track with your homework. What would you like help with today?
+            </div>
+        </div>
+        <div class="ai-input-area">
+            <div class="quick-actions">
+                <button class="quick-action-btn" data-action="analyze">Analyze my schedule</button>
+                <button class="quick-action-btn" data-action="tips">Time management tips</button>
+                <button class="quick-action-btn" data-action="prioritize">Help prioritize</button>
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" class="ai-input" id="aiInput" placeholder="Ask me anything...">
+                <button class="ai-send-btn" id="aiSendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class HomeworkTracker {
+            constructor() {
+                this.currentDate = new Date();
+                this.selectedDate = null;
+                this.todos = {};
+                this.conversationContext = null;
+                this.init();
+            }
+
+            init() {
+                this.renderCalendar();
+                this.bindEvents();
+                this.initAiAssistant();
+            }
+
+            bindEvents() {
+                document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1));
+                document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1));
+                document.getElementById('closeModal').addEventListener('click', () => this.closeModal());
+                document.getElementById('addTodo').addEventListener('click', () => this.addTodo());
+                document.getElementById('addEvent').addEventListener('click', () => this.addEvent());
+                document.getElementById('todoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTodo();
+                });
+                document.getElementById('todoModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'todoModal') this.closeModal();
+                });
+            }
+
+            initAiAssistant() {
+                document.getElementById('openAiBtn').addEventListener('click', () => {
+                    document.getElementById('aiSidebar').classList.add('open');
+                });
+                
+                document.getElementById('closeAiBtn').addEventListener('click', () => {
+                    document.getElementById('aiSidebar').classList.remove('open');
+                });
+                
+                document.getElementById('aiSendBtn').addEventListener('click', () => this.sendAiMessage());
+                document.getElementById('aiInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendAiMessage();
+                });
+
+                document.querySelectorAll('.quick-action-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.handleQuickAction(btn.dataset.action);
+                    });
+                });
+            }
+
+            sendAiMessage() {
+                const input = document.getElementById('aiInput');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                this.addAiMessage(message, 'user');
+                input.value = '';
+                
+                setTimeout(() => {
+                    const response = this.generateAiResponse(message);
+                    this.addAiMessage(response, 'assistant');
+                }, 500);
+            }
+
+            addAiMessage(text, sender) {
+                const chatArea = document.getElementById('aiChatArea');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'ai-message ' + sender;
+                messageDiv.textContent = text;
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            generateAiResponse(message) {
+                const msg = message.toLowerCase();
+                
+                if (msg.includes('schedule') || msg.includes('busy') || msg.includes('overwhelm')) {
+                    return this.analyzeSchedule() + " What's your most urgent task right now?";
+                }
+                
+                if (msg.includes('procrastinat') || msg.includes('avoid')) {
+                    return "Starting is the hardest part! What task are you avoiding? Is it boring, hard, or confusing?";
+                }
+                
+                if (msg.includes('study') || msg.includes('exam') || msg.includes('test')) {
+                    return "Let's make a study plan! What subject? When is the test? How much material do you need to cover?";
+                }
+                
+                if (msg.includes('priorit') || msg.includes('first')) {
+                    return this.getPrioritizationAdvice() + " What tasks are you choosing between?";
+                }
+                
+                if (msg.includes('focus') || msg.includes('distract')) {
+                    return "Focus troubles are common! What distracts you most - phone, social media, or noise?";
+                }
+                
+                if (msg.includes('deadline') || msg.includes('due tomorrow')) {
+                    return "Deadline stress! When is it due? What's left to complete? How long will each part take?";
+                }
+                
+                if (msg.includes('tired') || msg.includes('burnout')) {
+                    return "You might need a break! When did you last take real rest? Are you getting 7-9 hours of sleep?";
+                }
+                
+                if (msg.includes('thanks') || msg.includes('thank')) {
+                    this.conversationContext = null;
+                    return "You're welcome! I'm here whenever you need help. You've got this!";
+                }
+                
+                if (msg.includes('hi') || msg.includes('hello')) {
+                    return "Hi! I'm your planning assistant. Tell me what you're working on or struggling with today?";
+                }
+                
+                return "I'm here to help! Tell me more about what you're working on or what's challenging you. The more details you share, the better advice I can give!";
+            }
+
+            handleQuickAction(action) {
+                if (action === 'analyze') {
+                    this.addAiMessage('Analyze my schedule', 'user');
+                    setTimeout(() => {
+                        this.addAiMessage(this.analyzeSchedule(), 'assistant');
+                    }, 500);
+                } else if (action === 'tips') {
+                    this.addAiMessage('Give me time management tips', 'user');
+                    setTimeout(() => {
+                        this.addAiMessage(this.getTimeManagementTip(), 'assistant');
+                    }, 500);
+                } else if (action === 'prioritize') {
+                    this.addAiMessage('Help me prioritize my tasks', 'user');
+                    setTimeout(() => {
+                        this.addAiMessage(this.getPrioritizationAdvice(), 'assistant');
+                    }, 500);
+                }
+            }
+
+            analyzeSchedule() {
+                let totalTasks = 0;
+                let completedTasks = 0;
+                let upcomingDays = 0;
+                
+                const today = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(today.getDate() + 7);
+                
+                Object.keys(this.todos).forEach(dateStr => {
+                    const date = new Date(dateStr);
+                    const tasks = this.todos[dateStr].filter(t => !t.isEvent);
+                    
+                    totalTasks += tasks.length;
+                    completedTasks += tasks.filter(t => t.completed).length;
+                    
+                    if (date >= today && date <= nextWeek) {
+                        upcomingDays += tasks.filter(t => !t.completed).length;
+                    }
+                });
+                
+                if (totalTasks === 0) {
+                    return "Your schedule is clear! Great time to plan ahead or work on long-term projects.";
+                }
+                
+                const completionRate = Math.round((completedTasks / totalTasks) * 100);
+                
+                let analysis = 'You have ' + totalTasks + ' total tasks, with ' + completedTasks + ' completed (' + completionRate + '% completion rate). ';
+                
+                if (upcomingDays > 5) {
+                    analysis += "Your next week looks busy! Try to tackle 2-3 tasks per day.";
+                } else if (upcomingDays > 0) {
+                    analysis += "Your workload looks manageable! Spread tasks evenly across the week.";
+                } else {
+                    analysis += "Great job staying on top of things!";
+                }
+                
+                return analysis;
+            }
+
+            getTimeManagementTip() {
+                const tips = [
+                    "Use the Eisenhower Matrix: Divide tasks into urgent/important, important/not urgent, urgent/not important, and neither.",
+                    "Time blocking works wonders! Assign specific time slots to tasks. Example: 3-4pm Math homework.",
+                    "Try the Pomodoro Technique: Work for 25 minutes, break for 5. After 4 sessions, take 15-30 min break.",
+                    "Plan your week every Sunday. Knowing what's coming helps you prepare mentally.",
+                    "Do your hardest tasks during peak energy hours. Most people are sharpest in the morning!",
+                    "Break large projects into smaller milestones. Day 1: Research, Day 2: Outline, Day 3: Draft, Day 4: Edit.",
+                    "Avoid multitasking! Your brain works better focusing on one thing at a time.",
+                    "Use the 2-minute rule: If something takes less than 2 minutes, do it immediately.",
+                    "Color code your tasks by subject or priority level. Visual organization helps!"
+                ];
+                
+                return tips[Math.floor(Math.random() * tips.length)];
+            }
+
+            getPrioritizationAdvice() {
+                let upcomingTasks = [];
+                const today = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(today.getDate() + 7);
+                
+                Object.keys(this.todos).forEach(dateStr => {
+                    const date = new Date(dateStr);
+                    if (date >= today && date <= nextWeek) {
+                        const tasks = this.todos[dateStr].filter(t => !t.isEvent && !t.completed);
+                        upcomingTasks.push(...tasks);
+                    }
+                });
+                
+                if (upcomingTasks.length === 0) {
+                    return "You don't have any pending tasks this week! Perfect time to get ahead.";
+                }
+                
+                if (upcomingTasks.length <= 3) {
+                    return 'You have ' + upcomingTasks.length + ' tasks coming up. Tackle them in order of due date!';
+                }
+                
+                return 'Priority strategy: You have ' + upcomingTasks.length + ' tasks. Focus on: 1) Anything due tomorrow, 2) Large projects, 3) Quick wins under 30 min, 4) Everything else.';
+            }
+
+            changeMonth(direction) {
+                this.currentDate.setMonth(this.currentDate.getMonth() + direction);
+                this.renderCalendar();
+            }
+
+            renderCalendar() {
+                const calendar = document.getElementById('calendar');
+                const currentMonth = document.getElementById('currentMonth');
+                
+                const year = this.currentDate.getFullYear();
+                const month = this.currentDate.getMonth();
+                
+                currentMonth.textContent = new Intl.DateTimeFormat('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                }).format(this.currentDate);
+
+                calendar.innerHTML = '';
+
+                const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHeader.textContent = day;
+                    calendar.appendChild(dayHeader);
+                });
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDayOfWeek = firstDay.getDay();
+
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day other-month';
+                    const prevMonthDate = new Date(year, month, -startingDayOfWeek + i + 1);
+                    dayElement.innerHTML = '<div class="day-number">' + prevMonthDate.getDate() + '</div>';
+                    calendar.appendChild(dayElement);
+                }
+
+                const today = new Date();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day';
+                    
+                    const currentDay = new Date(year, month, day);
+                    const dateString = this.formatDate(currentDay);
+                    
+                    if (currentDay.toDateString() === today.toDateString()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    const todosForDay = this.todos[dateString] || [];
+                    const completedTodos = todosForDay.filter(todo => todo.completed);
+                    const pendingTodos = todosForDay.filter(todo => !todo.completed);
+                    const pendingTasks = pendingTodos.filter(todo => !todo.isEvent);
+                    const completedTasks = completedTodos.filter(todo => !todo.isEvent);
+                    
+                    if (todosForDay.length > 0) {
+                        if (pendingTasks.length > 0) {
+                            dayElement.classList.add('has-todos');
+                        } else if (completedTasks.length > 0) {
+                            dayElement.classList.add('all-completed');
+                        }
+                        
+                        if (pendingTasks.length > 0) {
+                            const todoCount = document.createElement('div');
+                            todoCount.className = 'todo-count';
+                            todoCount.textContent = pendingTasks.length;
+                            dayElement.appendChild(todoCount);
+                        }
+                        
+                        if (completedTasks.length > 0) {
+                            const completedCount = document.createElement('div');
+                            completedCount.className = 'completed-count';
+                            completedCount.textContent = completedTasks.length;
+                            dayElement.appendChild(completedCount);
+                        }
+                    }
+                    
+                    dayElement.innerHTML += '<div class="day-number">' + day + '</div>';
+                    
+                    if (todosForDay.length > 0) {
+                        const preview = document.createElement('div');
+                        preview.className = 'day-preview';
+                        
+                        const events = todosForDay.filter(item => item.isEvent);
+                        const previewEvents = events.slice(0, 3);
+                        
+                        previewEvents.forEach(event => {
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'preview-item preview-event';
+                            
+                            const words = event.text.split(' ').slice(0, 3).join(' ');
+                            previewItem.textContent = words + (event.text.split(' ').length > 3 ? '...' : '');
+                            
+                            preview.appendChild(previewItem);
+                        });
+                        
+                        if (previewEvents.length > 0) {
+                            dayElement.appendChild(preview);
+                        }
+                    }
+                    
+                    dayElement.addEventListener('click', () => this.openModal(currentDay));
+                    calendar.appendChild(dayElement);
+                }
+
+                const totalCells = calendar.children.length - 7;
+                const remainingCells = 42 - totalCells - 7;
+                for (let i = 1; i <= remainingCells && totalCells < 35; i++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day other-month';
+                    dayElement.innerHTML = '<div class="day-number">' + i + '</div>';
+                    calendar.appendChild(dayElement);
+                }
+            }
+
+            openModal(date) {
+                this.selectedDate = date;
+                const modal = document.getElementById('todoModal');
+                const modalTitle = document.getElementById('modalTitle');
+                
+                modalTitle.textContent = '📅 ' + date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                this.renderTodoList();
+                modal.style.display = 'block';
+                
+                setTimeout(() => {
+                    document.getElementById('todoInput').focus();
+                }, 100);
+            }
+
+            closeModal() {
+                document.getElementById('todoModal').style.display = 'none';
+                this.selectedDate = null;
+            }
+
+            addTodo() {
+                const input = document.getElementById('todoInput');
+                const todoText = input.value.trim();
+                
+                if (!todoText || !this.selectedDate) return;
+                
+                const dateString = this.formatDate(this.selectedDate);
+                if (!this.todos[dateString]) {
+                    this.todos[dateString] = [];
+                }
+                
+                this.todos[dateString].push({
+                    id: Date.now(),
+                    text: todoText,
+                    completed: false,
+                    isEvent: false,
+                    createdAt: new Date()
+                });
+                
+                input.value = '';
+                this.renderTodoList();
+                this.renderCalendar();
+            }
+
+            addEvent() {
+                const input = document.getElementById('todoInput');
+                const eventText = input.value.trim();
+                
+                if (!eventText || !this.selectedDate) return;
+                
+                const dateString = this.formatDate(this.selectedDate);
+                if (!this.todos[dateString]) {
+                    this.todos[dateString] = [];
+                }
+                
+                this.todos[dateString].push({
+                    id: Date.now(),
+                    text: eventText,
+                    completed: false,
+                    isEvent: true,
+                    createdAt: new Date()
+                });
+                
+                input.value = '';
+                this.renderTodoList();
+                this.renderCalendar();
+            }
+
+            renderTodoList() {
+                const todoList = document.getElementById('todoList');
+                const emptyState = document.getElementById('emptyState');
+                const dateString = this.formatDate(this.selectedDate);
+                const todos = this.todos[dateString] || [];
+                
+                todoList.innerHTML = '';
+                
+                if (todos.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                
+                todos.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = 'todo-item' + (todo.completed ? ' completed' : '') + (todo.isEvent ? ' event' : '');
+                    
+                    const todoText = document.createElement('span');
+                    todoText.className = 'todo-text';
+                    todoText.textContent = todo.text;
+                    
+                    const todoActions = document.createElement('div');
+                    todoActions.className = 'todo-actions';
+                    
+                    if (todo.isEvent) {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-btn';
+                        removeBtn.textContent = 'Remove';
+                        removeBtn.addEventListener('click', () => this.deleteTodo(todo.id));
+                        todoActions.appendChild(removeBtn);
+                    } else {
+                        const completeBtn = document.createElement('button');
+                        completeBtn.className = 'complete-btn' + (todo.completed ? ' completed' : '');
+                        completeBtn.textContent = todo.completed ? 'Completed' : 'Complete';
+                        if (!todo.completed) {
+                            completeBtn.addEventListener('click', () => this.toggleTodo(todo.id));
+                        }
+                        todoActions.appendChild(completeBtn);
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.addEventListener('click', () => this.deleteTodo(todo.id));
+                        todoActions.appendChild(deleteBtn);
+                    }
+                    
+                    li.appendChild(todoText);
+                    li.appendChild(todoActions);
+                    todoList.appendChild(li);
+                });
+            }
+
+            toggleTodo(id) {
+                const dateString = this.formatDate(this.selectedDate);
+                const todos = this.todos[dateString];
+                const todo = todos.find(t => t.id === id);
+                
+                if (todo) {
+                    todo.completed = !todo.completed;
+                    this.renderTodoList();
+                    this.renderCalendar();
+                }
+            }
+
+            deleteTodo(id) {
+                const dateString = this.formatDate(this.selectedDate);
+                const todos = this.todos[dateString];
+                const index = todos.findIndex(t => t.id === id);
+                
+                if (index > -1) {
+                    todos.splice(index, 1);
+                    this.renderTodoList();
+                    this.renderCalendar();
+                }
+            }
+
+            formatDate(date) {
+                return date.toISOString().split('T')[0];
+            }
+        }
+
+        new HomeworkTracker();
+    </script>
+</body>
+</html>
